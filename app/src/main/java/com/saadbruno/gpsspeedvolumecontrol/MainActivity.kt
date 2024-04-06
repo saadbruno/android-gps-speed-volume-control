@@ -1,5 +1,6 @@
 package com.saadbruno.gpsspeedvolumecontrol
 
+import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,9 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import com.saadbruno.gpsspeedvolumecontrol.ui.theme.GPSSpeedVolumeControlTheme
 
 class MainActivity : ComponentActivity() {
+    private val permissions = arrayOf(
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -26,6 +32,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        ActivityCompat.requestPermissions(this, permissions, 0)
     }
 }
 
@@ -39,10 +46,13 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true,
+    showSystemUi = true
+)
 @Composable
 fun GreetingPreview() {
     GPSSpeedVolumeControlTheme {
-        Greeting("Android")
+        Greeting("Android2")
     }
 }
