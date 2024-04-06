@@ -9,6 +9,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -17,12 +18,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.saadbruno.gpsspeedvolumecontrol.ui.theme.GPSSpeedVolumeControlTheme
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     private val permissions = arrayOf(
@@ -48,7 +52,7 @@ fun Speedometer() {
     val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     val speed = remember { mutableFloatStateOf(0f) }
 
-    val locationListener = LocationListener { location -> speed.floatValue = location.speed }
+    val locationListener = LocationListener { location -> speed.floatValue = location.speed * 2.23694f }
 
     BackHandler {
         locationManager.removeUpdates(locationListener)
@@ -69,8 +73,19 @@ fun Speedometer() {
         // Handle permission denial
     }
 
-    Column {
-        Text(text = "Current Speed: ${speed.floatValue} m/s")
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "${speed.floatValue.roundToInt() / 10.0}",
+            fontSize = 64.sp
+        )
+        Text(
+            text = "mph",
+            fontSize = 24.sp
+        )
     }
 }
 
