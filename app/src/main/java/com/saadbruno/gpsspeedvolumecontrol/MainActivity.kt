@@ -20,7 +20,9 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
@@ -37,14 +39,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             GPSSpeedVolumeControlTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    SpeedometerScreen()
-                }
+                Speedometer()
             }
         }
         ActivityCompat.requestPermissions(this, permissions, 0)
     }
 }
+
 
 @Composable
 fun Speedometer() {
@@ -73,26 +74,30 @@ fun Speedometer() {
         // Handle permission denial
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "${speed.floatValue.roundToInt() / 10.0}",
-            fontSize = 64.sp
-        )
-        Text(
-            text = "mph",
-            fontSize = 24.sp
-        )
-    }
+    SpeedometerLayout("${speed.floatValue.roundToInt() / 10.0}")
+
 }
 
 @Composable
-fun SpeedometerScreen() {
-    Column {
-        Speedometer()
+fun SpeedometerLayout(speed: String) {
+    Surface(modifier = Modifier.fillMaxSize(), color = Color.DarkGray) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = speed,
+                fontSize = 64.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Black
+            )
+            Text(
+                text = "mph",
+                fontSize = 24.sp,
+                color = Color.White
+            )
+        }
     }
 }
 
@@ -103,6 +108,6 @@ fun SpeedometerScreen() {
 @Composable
 fun SpeedometerPreview() {
     GPSSpeedVolumeControlTheme {
-        SpeedometerScreen()
+        SpeedometerLayout("55.5")
     }
 }
