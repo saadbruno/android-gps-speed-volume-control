@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,7 +60,7 @@ fun Speedometer() {
     val context = LocalContext.current
     val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     val speed = remember { mutableFloatStateOf(0f) }
-    var autoVolumeEnabled by remember { mutableStateOf(true) }
+    var autoVolumeEnabled by rememberSaveable { mutableStateOf(true) }
 
     val locationListener = LocationListener { location ->
         speed.floatValue = location.speed
