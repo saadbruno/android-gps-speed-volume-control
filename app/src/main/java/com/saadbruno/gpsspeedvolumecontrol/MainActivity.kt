@@ -14,11 +14,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,10 +59,13 @@ fun Speedometer() {
     val context = LocalContext.current
     val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     val speed = remember { mutableFloatStateOf(0f) }
+    var autoVolumeEnabled by remember { mutableStateOf(true) }
 
     val locationListener = LocationListener { location ->
         speed.floatValue = location.speed
-        adjustVolume(context, location.speed)
+        if (autoVolumeEnabled) {
+            adjustVolume(context, location.speed)
+        }
     }
 
     BackHandler {
@@ -82,7 +90,9 @@ fun Speedometer() {
     SpeedometerLayout(
         "${(speed.floatValue * 2.23694f * 10).roundToInt() / 10.0}",
         "mph",
-        "${speed.floatValue}"
+        "${speed.floatValue}",
+        autoVolumeEnabled,
+        onToggle = { autoVolumeEnabled = !autoVolumeEnabled }
     )
 
 }
@@ -102,7 +112,8 @@ fun adjustVolume(context: Context, speed: Float) {
 }
 
 @Composable
-fun SpeedometerLayout(speed: String, unit: String, speedDebug: String) {
+fun SpeedometerLayout(speed: String, unit: String, speedDebug: String, isEnabled: Boolean, onToggle: () -> Unit) {
+
     Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -129,9 +140,24 @@ fun SpeedometerLayout(speed: String, unit: String, speedDebug: String) {
             Text(
                 text = "m/s",
                 fontSize = 10.sp,
-                color = Color.DarkGray
+                color = Color.DarkGray,
+                modifier = Modifier.padding(bottom = 150.dp)
+            )
+            ToggleButton(
+                isEnabled,
+                onToggle
             )
         }
+    }
+}
+
+@Composable
+fun ToggleButton(isEnabled: Boolean, onToggle: () -> Unit) {
+    Button(
+        onClick = { onToggle() },
+        modifier = Modifier.padding(16.dp).wrapContentWidth()
+    ) {
+        Text(if (isEnabled) "Desligar volume automático" else "Ligar volume automático")
     }
 }
 
@@ -141,7 +167,14 @@ fun SpeedometerLayout(speed: String, unit: String, speedDebug: String) {
 )
 @Composable
 fun SpeedometerPreview() {
+    var foo = false
     GPSSpeedVolumeControlTheme {
-        SpeedometerLayout("55.5", "mph", "1234.4")
+        SpeedometerLayout(
+            "55.5",
+            "mph",
+            "1234.4",
+            foo,
+            onToggle = { foo = !foo }
+            )
     }
 }
