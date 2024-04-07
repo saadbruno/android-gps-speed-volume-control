@@ -73,12 +73,12 @@ fun Speedometer() {
         // Handle permission denial
     }
 
-    SpeedometerLayout("${speed.floatValue.roundToInt() / 10.0}")
+    SpeedometerLayout("${speed.floatValue.roundToInt() / 10.0}", "mph")
 
 }
 
 @Composable
-fun SpeedometerLayout(speed: String) {
+fun SpeedometerLayout(speed: String, unit: String) {
     Surface(modifier = Modifier.fillMaxSize(), color = Color.DarkGray) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -92,7 +92,7 @@ fun SpeedometerLayout(speed: String) {
                 fontWeight = FontWeight.Black
             )
             Text(
-                text = "mph",
+                text = unit,
                 fontSize = 24.sp,
                 color = Color.White
             )
@@ -107,6 +107,6 @@ fun SpeedometerLayout(speed: String) {
 @Composable
 fun SpeedometerPreview() {
     GPSSpeedVolumeControlTheme {
-        SpeedometerLayout("55.5")
+        SpeedometerLayout("55.5", "mph")
     }
 }
