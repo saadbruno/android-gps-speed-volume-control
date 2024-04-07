@@ -52,7 +52,7 @@ fun Speedometer() {
     val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     val speed = remember { mutableFloatStateOf(0f) }
 
-    val locationListener = LocationListener { location -> speed.floatValue = location.speed * 2.23694f }
+    val locationListener = LocationListener { location -> speed.floatValue = location.speed }
 
     BackHandler {
         locationManager.removeUpdates(locationListener)
@@ -73,7 +73,7 @@ fun Speedometer() {
         // Handle permission denial
     }
 
-    SpeedometerLayout("${speed.floatValue.roundToInt() / 10.0}", "mph")
+    SpeedometerLayout("${(speed.floatValue * 2.23694f).roundToInt() / 10.0}", "mph")
 
 }
 
