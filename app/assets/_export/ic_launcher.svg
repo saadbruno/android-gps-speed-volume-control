@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1024 1024">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #000;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5 {
+        stroke-width: 0px;
+      }
+
+      .cls-6 {
+        stroke-width: 10.22px;
+      }
+
+      .cls-6, .cls-2, .cls-7 {
+        fill: none;
+      }
+
+      .cls-6, .cls-7 {
+        stroke: #fff;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-7 {
+        stroke-linecap: round;
+        stroke-width: 37.64px;
+      }
+
+      .cls-8 {
+        clip-path: url(#clippath);
+      }
+
+      .cls-3 {
+        fill: url(#radial-gradient);
+      }
+
+      .cls-4 {
+        fill: #fff;
+      }
+
+      .cls-5 {
+        fill: #ff4e00;
+      }
+    </style>
+    <radialGradient id="radial-gradient" cx="512" cy="512" fx="512" fy="512" r="457.5" gradientUnits="userSpaceOnUse">
+      <stop offset=".41" stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".57" stop-color="rgba(255, 255, 255, .02)" stop-opacity=".02"/>
+      <stop offset=".74" stop-color="rgba(255, 255, 255, .06)" stop-opacity=".06"/>
+      <stop offset=".91" stop-color="rgba(255, 255, 255, .15)" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".2"/>
+    </radialGradient>
+    <clipPath id="clippath">
+      <circle class="cls-2" cx="512" cy="512" r="457.5"/>
+    </clipPath>
+  </defs>
+  <g id="Layer_2" data-name="Layer 2">
+    <rect class="cls-1" width="1024" height="1024" rx="79.52" ry="79.52"/>
+    <circle class="cls-3" cx="512" cy="512" r="457.5"/>
+  </g>
+  <g id="Layer_1" data-name="Layer 1">
+    <g class="cls-8">
+      <g>
+        <line class="cls-6" x1="861.48" y1="512" x2="979" y2="512"/>
+        <line class="cls-6" x1="162.52" y1="512" x2="45" y2="512"/>
+        <line class="cls-6" x1="834.88" y1="378.26" x2="943.45" y2="333.29"/>
+        <line class="cls-6" x1="189.12" y1="645.74" x2="80.55" y2="690.71"/>
+        <line class="cls-6" x1="759.12" y1="264.88" x2="842.22" y2="181.78"/>
+        <line class="cls-6" x1="645.74" y1="189.12" x2="690.71" y2="80.55"/>
+        <line class="cls-6" x1="512" y1="162.52" x2="512" y2="45"/>
+        <line class="cls-6" x1="378.26" y1="189.12" x2="333.29" y2="80.55"/>
+        <line class="cls-6" x1="264.88" y1="264.88" x2="181.78" y2="181.78"/>
+        <line class="cls-6" x1="189.12" y1="378.26" x2="80.55" y2="333.29"/>
+        <line class="cls-6" x1="834.88" y1="645.74" x2="943.45" y2="690.71"/>
+      </g>
+    </g>
+    <polygon class="cls-5" points="596.39 347.35 753 157 633.61 372.65 596.39 347.35 596.39 347.35"/>
+    <g>
+      <path class="cls-4" d="M509.81,284.17l-113.29,116.9c-4.48,4.62-10.64,7.23-17.07,7.23h-91.25c-8.39,0-15.2,6.8-15.2,15.2v202.99c0,8.39,6.8,15.2,15.2,15.2h91.25c6.44,0,12.6,2.61,17.07,7.23l113.29,116.9c11.42,11.79,31.39,3.7,31.39-12.72v-456.22c0-16.42-19.97-24.51-31.39-12.72Z"/>
+      <path class="cls-7" d="M652.1,747.95c63.45-55.54,99.9-135.88,99.9-220.2s-33.83-158.93-93.32-214.26"/>
+      <path class="cls-7" d="M596.32,684.22c45.09-39.46,70.99-96.55,70.99-156.47s-24.04-112.93-66.31-152.25"/>
+      <path class="cls-4" d="M512.97,404.89v245.73c47.33-20.68,80.42-67.91,80.42-122.86s-33.08-102.18-80.42-122.86Z"/>
+    </g>
+  </g>
+</svg>
