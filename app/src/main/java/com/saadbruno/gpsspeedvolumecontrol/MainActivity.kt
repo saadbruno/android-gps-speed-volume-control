@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationListener
 import android.location.LocationManager
+import android.media.AudioManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -12,6 +13,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -52,7 +55,10 @@ fun Speedometer() {
     val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     val speed = remember { mutableFloatStateOf(0f) }
 
-    val locationListener = LocationListener { location -> speed.floatValue = location.speed }
+    val locationListener = LocationListener { location ->
+        speed.floatValue = location.speed
+        adjustVolume(context, location.speed)
+    }
 
     BackHandler {
         locationManager.removeUpdates(locationListener)
@@ -73,13 +79,31 @@ fun Speedometer() {
         // Handle permission denial
     }
 
-    SpeedometerLayout("${(speed.floatValue * 2.23694f).roundToInt() / 10.0}", "mph")
+    SpeedometerLayout(
+        "${(speed.floatValue * 2.23694f * 10).roundToInt() / 10.0}",
+        "mph",
+        "${speed.floatValue}"
+    )
 
 }
 
+fun adjustVolume(context: Context, speed: Float) {
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+    val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+
+    val volume = when {
+        speed < 4.0 -> (maxVolume * 0.2).toInt()
+        speed > 8.0 -> maxVolume
+        else -> ((speed - 4.0) / (8.0 - 4.0) * maxVolume).toInt()
+    }
+
+    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
+}
+
 @Composable
-fun SpeedometerLayout(speed: String, unit: String) {
-    Surface(modifier = Modifier.fillMaxSize(), color = Color.DarkGray) {
+fun SpeedometerLayout(speed: String, unit: String, speedDebug: String) {
+    Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -94,7 +118,18 @@ fun SpeedometerLayout(speed: String, unit: String) {
             Text(
                 text = unit,
                 fontSize = 24.sp,
-                color = Color.White
+                color = Color.Gray
+            )
+            Text(
+                text = speedDebug,
+                fontSize = 20.sp,
+                color = Color.DarkGray,
+                modifier = Modifier.padding(top = 50.dp)
+            )
+            Text(
+                text = "m/s",
+                fontSize = 10.sp,
+                color = Color.DarkGray
             )
         }
     }
@@ -107,6 +142,6 @@ fun SpeedometerLayout(speed: String, unit: String) {
 @Composable
 fun SpeedometerPreview() {
     GPSSpeedVolumeControlTheme {
-        SpeedometerLayout("55.5", "mph")
+        SpeedometerLayout("55.5", "mph", "1234.4")
     }
 }
