@@ -12,11 +12,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -92,7 +93,7 @@ fun Speedometer() {
         "mph",
         "${speed.floatValue}",
         autoVolumeEnabled,
-        onToggle = { autoVolumeEnabled = !autoVolumeEnabled }
+        onCheckedChange = { autoVolumeEnabled = it }
     )
 
 }
@@ -112,7 +113,7 @@ fun adjustVolume(context: Context, speed: Float) {
 }
 
 @Composable
-fun SpeedometerLayout(speed: String, unit: String, speedDebug: String, isEnabled: Boolean, onToggle: () -> Unit) {
+fun SpeedometerLayout(speed: String, unit: String, speedDebug: String, isEnabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
 
     Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
         Column(
@@ -122,13 +123,13 @@ fun SpeedometerLayout(speed: String, unit: String, speedDebug: String, isEnabled
         ) {
             Text(
                 text = speed,
-                fontSize = 64.sp,
+                fontSize = 128.sp,
                 color = Color.White,
                 fontWeight = FontWeight.Black
             )
             Text(
                 text = unit,
-                fontSize = 24.sp,
+                fontSize = 48.sp,
                 color = Color.Gray
             )
             Text(
@@ -143,21 +144,28 @@ fun SpeedometerLayout(speed: String, unit: String, speedDebug: String, isEnabled
                 color = Color.DarkGray,
                 modifier = Modifier.padding(bottom = 150.dp)
             )
-            ToggleButton(
+            ToggleSwitch(
                 isEnabled,
-                onToggle
+                onCheckedChange
             )
         }
     }
 }
 
 @Composable
-fun ToggleButton(isEnabled: Boolean, onToggle: () -> Unit) {
-    Button(
-        onClick = { onToggle() },
-        modifier = Modifier.padding(16.dp).wrapContentWidth()
+fun ToggleSwitch(isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(if (isEnabled) "Desligar volume automático" else "Ligar volume automático")
+        Switch(
+            checked = isChecked,
+            onCheckedChange = { onCheckedChange(it) },
+            modifier = Modifier.padding(16.dp).wrapContentWidth()
+        )
+        Text(
+            text = "Volume automático",
+            color = Color.White
+        )
     }
 }
 
@@ -174,7 +182,7 @@ fun SpeedometerPreview() {
             "mph",
             "1234.4",
             foo,
-            onToggle = { foo = !foo }
+            onCheckedChange = { foo = it }
             )
     }
 }
