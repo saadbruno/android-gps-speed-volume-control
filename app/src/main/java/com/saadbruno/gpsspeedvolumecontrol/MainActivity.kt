@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -112,6 +111,7 @@ fun adjustVolume(context: Context, speed: Float) {
     audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
 }
 
+// MAIN LAYOUT
 @Composable
 fun SpeedometerLayout(speed: String, unit: String, speedDebug: String, isEnabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
 
@@ -119,36 +119,53 @@ fun SpeedometerLayout(speed: String, unit: String, speedDebug: String, isEnabled
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            Text(
-                text = speed,
-                fontSize = 128.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Black
-            )
-            Text(
-                text = unit,
-                fontSize = 48.sp,
-                color = Color.Gray
-            )
-            Text(
-                text = speedDebug,
-                fontSize = 20.sp,
-                color = Color.DarkGray,
-                modifier = Modifier.padding(top = 50.dp)
-            )
-            Text(
-                text = "m/s",
-                fontSize = 10.sp,
-                color = Color.DarkGray,
-                modifier = Modifier.padding(bottom = 150.dp)
-            )
+            BigSpeedMeter(speed, unit)
+            SmallSpeedMeter(speedDebug, "m/s")
             ToggleSwitch(
                 isEnabled,
                 onCheckedChange
             )
         }
+    }
+}
+
+// COMPONENTS
+@Composable
+fun BigSpeedMeter(value: String, unit: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = value,
+            fontSize = 128.sp,
+            color = Color.White,
+            fontWeight = FontWeight.Black
+        )
+        Text(
+            text = unit,
+            fontSize = 48.sp,
+            color = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun SmallSpeedMeter(value: String, unit: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = value,
+            fontSize = 20.sp,
+            color = Color.DarkGray
+        )
+        Text(
+            text = unit,
+            fontSize = 10.sp,
+            color = Color.DarkGray
+        )
     }
 }
 
@@ -159,15 +176,17 @@ fun ToggleSwitch(isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     ) {
         Switch(
             checked = isChecked,
-            onCheckedChange = { onCheckedChange(it) },
-            modifier = Modifier.padding(16.dp).wrapContentWidth()
+            onCheckedChange = { onCheckedChange(it) }
         )
         Text(
             text = "Volume automático",
-            color = Color.White
+            color = Color.White,
+            modifier = Modifier.padding(start = 10.dp)
         )
     }
 }
+
+// LAYOUT PREVIEWS
 
 @Preview(
     showBackground = true,
@@ -184,5 +203,23 @@ fun SpeedometerPreview() {
             foo,
             onCheckedChange = { foo = it }
             )
+    }
+}
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true, device = "spec:parent=pixel_5,orientation=landscape"
+)
+@Composable
+fun SpeedometerPreviewLandscape() {
+    var foo = false
+    GPSSpeedVolumeControlTheme {
+        SpeedometerLayout(
+            "55.5",
+            "mph",
+            "1234.4",
+            foo,
+            onCheckedChange = { foo = it }
+        )
     }
 }
