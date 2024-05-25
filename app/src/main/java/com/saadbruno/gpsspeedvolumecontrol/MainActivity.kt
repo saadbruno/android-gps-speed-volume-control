@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import android.util.Log
 
+private const val DEBUG = false
 private const val PREFERENCES_FILE_NAME = "volume_preferences"
 private const val HIGH_SPEED_THRESHOLD = 4.0 // m/s
 private const val VOLUME_PREFERENCE_KEY = "volume_preference"
@@ -130,12 +131,12 @@ fun adjustVolume(context: Context, speed: Float) {
         getLowSpeedVolume(context)
     }
 
-    Log.d("Speedometer", "Speed: $speed, Current Volume: $setVolume, Current System Volume: $currentVolume, Target Volume: $targetVolume, MaxVolume: $maxVolume, Volume Change In Progress: $volumeChangeInProgress")
+    if(DEBUG) Log.d("Speedometer", "Speed: $speed, Current Volume: $setVolume, Current System Volume: $currentVolume, Target Volume: $targetVolume, MaxVolume: $maxVolume, Volume Change In Progress: $volumeChangeInProgress")
 
     // Start a coroutine to gradually change the volume if necessary
     if (!volumeChangeInProgress && setVolume != targetVolume) {
         CoroutineScope(Dispatchers.Main).launch {
-            Log.d("Speedometer", "Starting volume change")
+            if(DEBUG) Log.d("Speedometer", "Starting volume change")
             volumeChangeInProgress = true
             while (setVolume != targetVolume) {
                 if (setVolume < targetVolume) {
@@ -154,7 +155,7 @@ fun adjustVolume(context: Context, speed: Float) {
     // handles user changing the volume manually, but only after the app has been launched
     if (setVolume != currentVolume) {
         if (launched) {
-            Log.d("Speedometer", "User changed volume manually. Updating preferences, and also setting setVolume to currentVolume")
+            if(DEBUG) Log.d("Speedometer", "User changed volume manually. Updating preferences, and also setting setVolume to currentVolume")
             setVolume = currentVolume // this prevents the volume from going back to the previous value when the user changes it manually
             storeUserVolume(context, currentVolume, speed) // stores the current volume for the current state
         } else {
@@ -181,7 +182,7 @@ private fun getLowSpeedVolume(context: Context): Int {
 
 // Set the system volume and store the new volume for the current state
 private fun setSystemVolume(context: Context, volume: Int) {
-    Log.d("Speedometer", "Setting system volume to $volume")
+    if(DEBUG) Log.d("Speedometer", "Setting system volume to $volume")
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     // Set the actual system volume
@@ -191,10 +192,10 @@ private fun setSystemVolume(context: Context, volume: Int) {
 private fun storeUserVolume(context: Context, volume: Int, speed: Float) {
     val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
     if (speed >= HIGH_SPEED_THRESHOLD) {
-        Log.d("Speedometer", "Storing high speed volume: $volume")
+        if(DEBUG) Log.d("Speedometer", "Storing high speed volume: $volume")
         sharedPreferences.edit().putInt("${VOLUME_PREFERENCE_KEY}_high", volume).apply()
     } else {
-        Log.d("Speedometer", "Storing low speed volume: $volume")
+        if(DEBUG) Log.d("Speedometer", "Storing low speed volume: $volume")
         sharedPreferences.edit().putInt("${VOLUME_PREFERENCE_KEY}_low", volume).apply()
     }
 }
