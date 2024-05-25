@@ -124,10 +124,10 @@ fun adjustVolume(context: Context, speed: Float) {
     // Determine the target volume based on the speed state
     targetVolume = if (speed >= HIGH_SPEED_THRESHOLD) {
         // High speed state
-        getHighSpeedVolume(context, maxVolume)
+        getHighSpeedVolume(context)
     } else {
         // Low speed state
-        getLowSpeedVolume(context, maxVolume)
+        getLowSpeedVolume(context)
     }
 
     Log.d("Speedometer", "Speed: $speed, Current Volume: $setVolume, Current System Volume: $currentVolume, Target Volume: $targetVolume, MaxVolume: $maxVolume, Volume Change In Progress: $volumeChangeInProgress")
@@ -144,7 +144,7 @@ fun adjustVolume(context: Context, speed: Float) {
                     setVolume--
                 }
                 // Update the actual volume
-                setSystemVolume(context, setVolume, speed)
+                setSystemVolume(context, setVolume)
                 delay(500) // Adjust the delay as needed for a smooth transition
             }
             volumeChangeInProgress = false
@@ -165,7 +165,7 @@ fun adjustVolume(context: Context, speed: Float) {
 }
 
 // Get the stored volume for the high speed state
-private fun getHighSpeedVolume(context: Context, maxVolume: Int): Int {
+private fun getHighSpeedVolume(context: Context): Int {
     //return (maxVolume * 0.9).roundToInt()
 
     val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
@@ -173,14 +173,14 @@ private fun getHighSpeedVolume(context: Context, maxVolume: Int): Int {
 }
 
 // Get the stored volume for the low speed state
-private fun getLowSpeedVolume(context: Context, maxVolume: Int): Int {
+private fun getLowSpeedVolume(context: Context): Int {
     //return (maxVolume * 0.1).roundToInt()
     val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
     return sharedPreferences.getInt("${VOLUME_PREFERENCE_KEY}_low", 2)
 }
 
 // Set the system volume and store the new volume for the current state
-private fun setSystemVolume(context: Context, volume: Int, speed: Float) {
+private fun setSystemVolume(context: Context, volume: Int) {
     Log.d("Speedometer", "Setting system volume to $volume")
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
