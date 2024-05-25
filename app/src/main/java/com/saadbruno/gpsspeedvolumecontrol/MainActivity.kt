@@ -9,7 +9,6 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,7 +36,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.saadbruno.gpsspeedvolumecontrol.ui.theme.GPSSpeedVolumeControlTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
     private val permissions = arrayOf(
@@ -71,9 +75,9 @@ fun Speedometer() {
         }
     }
 
-    BackHandler {
-        locationManager.removeUpdates(locationListener)
-    }
+//    BackHandler {
+//        locationManager.removeUpdates(locationListener)
+//    }
 
     if (ContextCompat.checkSelfPermission(
             context,
@@ -100,18 +104,90 @@ fun Speedometer() {
 
 }
 
-fun adjustVolume(context: Context, speed: Float) {
-    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+private const val PREFERENCES_FILE_NAME = "volume_preferences"
+private const val HIGH_SPEED_THRESHOLD = 4.0 // m/s
+private const val VOLUME_PREFERENCE_KEY = "volume_preference"
 
+private var setVolume = 0
+private var targetVolume = 0
+private var volumeChangeInProgress = false
+
+fun adjustVolume(context: Context, speed: Float) {
+
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-    val volume = when {
-        speed < 4.0 -> (maxVolume * 0.2).toInt()
-        speed > 8.0 -> maxVolume
-        else -> ((speed - 4.0) / (8.0 - 4.0) * maxVolume).toInt()
+    val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+
+    // Determine the target volume based on the speed state
+    targetVolume = if (speed >= HIGH_SPEED_THRESHOLD) {
+        // High speed state
+        getHighSpeedVolume(context, maxVolume)
+    } else {
+        // Low speed state
+        getLowSpeedVolume(context, maxVolume)
     }
 
+    Log.d("Speedometer", "Speed: $speed, Current Volume: $setVolume, Current System Volume: $currentVolume, Target Volume: $targetVolume, MaxVolume: $maxVolume, Volume Change In Progress: $volumeChangeInProgress")
+
+    // Start a coroutine to gradually change the volume if necessary
+    if (!volumeChangeInProgress && setVolume != targetVolume) {
+        CoroutineScope(Dispatchers.Main).launch {
+            Log.d("Speedometer", "Starting volume change")
+            volumeChangeInProgress = true
+            while (setVolume != targetVolume) {
+                if (setVolume < targetVolume) {
+                    setVolume++
+                } else {
+                    setVolume--
+                }
+                // Update the actual volume
+                setSystemVolume(context, setVolume, speed)
+                delay(500) // Adjust the delay as needed for a smooth transition
+            }
+            volumeChangeInProgress = false
+        }
+    }
+
+    if (setVolume != currentVolume) {
+        storeUserVolume(context, currentVolume, speed)
+    }
+
+}
+
+// Get the stored volume for the high speed state
+private fun getHighSpeedVolume(context: Context, maxVolume: Int): Int {
+    //return (maxVolume * 0.9).roundToInt()
+
+    val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
+    return sharedPreferences.getInt("${VOLUME_PREFERENCE_KEY}_high", 14)
+}
+
+// Get the stored volume for the low speed state
+private fun getLowSpeedVolume(context: Context, maxVolume: Int): Int {
+    //return (maxVolume * 0.1).roundToInt()
+    val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
+    return sharedPreferences.getInt("${VOLUME_PREFERENCE_KEY}_low", 2)
+}
+
+// Set the system volume and store the new volume for the current state
+private fun setSystemVolume(context: Context, volume: Int, speed: Float) {
+    Log.d("Speedometer", "Setting system volume to $volume")
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+    // Set the actual system volume
     audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
+}
+
+private fun storeUserVolume(context: Context, volume: Int, speed: Float) {
+    val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
+    if (speed >= HIGH_SPEED_THRESHOLD) {
+        Log.d("Speedometer", "Storing high speed volume: $volume")
+        sharedPreferences.edit().putInt("${VOLUME_PREFERENCE_KEY}_high", volume).apply()
+    } else {
+        Log.d("Speedometer", "Storing low speed volume: $volume")
+        sharedPreferences.edit().putInt("${VOLUME_PREFERENCE_KEY}_low", volume).apply()
+    }
 }
 
 // MAIN LAYOUT
