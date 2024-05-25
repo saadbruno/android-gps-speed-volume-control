@@ -43,6 +43,15 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import android.util.Log
 
+private const val PREFERENCES_FILE_NAME = "volume_preferences"
+private const val HIGH_SPEED_THRESHOLD = 4.0 // m/s
+private const val VOLUME_PREFERENCE_KEY = "volume_preference"
+
+private var setVolume = 0
+private var targetVolume = 0
+private var volumeChangeInProgress = false
+private var launched = false
+
 class MainActivity : ComponentActivity() {
     private val permissions = arrayOf(
         Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -104,13 +113,6 @@ fun Speedometer() {
 
 }
 
-private const val PREFERENCES_FILE_NAME = "volume_preferences"
-private const val HIGH_SPEED_THRESHOLD = 4.0 // m/s
-private const val VOLUME_PREFERENCE_KEY = "volume_preference"
-
-private var setVolume = 0
-private var targetVolume = 0
-private var volumeChangeInProgress = false
 
 fun adjustVolume(context: Context, speed: Float) {
 
@@ -149,8 +151,15 @@ fun adjustVolume(context: Context, speed: Float) {
         }
     }
 
+    // handles user changing the volume manually, but only after the app has been launched
     if (setVolume != currentVolume) {
-        storeUserVolume(context, currentVolume, speed)
+        if (launched) {
+            Log.d("Speedometer", "User changed volume manually. Updating preferences, and also setting setVolume to currentVolume")
+            setVolume = currentVolume // this prevents the volume from going back to the previous value when the user changes it manually
+            storeUserVolume(context, currentVolume, speed) // stores the current volume for the current state
+        } else {
+            launched = true
+        }
     }
 
 }
