@@ -1,12 +1,17 @@
 package com.saadbruno.gpsspeedvolumecontrol
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationListener
 import android.location.LocationManager
 import android.media.AudioManager
 import android.os.Bundle
+import android.os.IBinder
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -42,7 +47,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import android.util.Log
+import androidx.core.app.NotificationCompat
 
+private const val DEBUG = true
 private const val PREFERENCES_FILE_NAME = "volume_preferences"
 private const val HIGH_SPEED_THRESHOLD = 4.0 // m/s
 private const val VOLUME_PREFERENCE_KEY = "volume_preference"
@@ -66,6 +73,11 @@ class MainActivity : ComponentActivity() {
             }
         }
         ActivityCompat.requestPermissions(this, permissions, 0)
+
+        // starts background location
+        val intent = Intent(this, LocationForegroundService::class.java)
+        startService(intent)
+
     }
 }
 
@@ -130,12 +142,12 @@ fun adjustVolume(context: Context, speed: Float) {
         getLowSpeedVolume(context)
     }
 
-    Log.d("Speedometer", "Speed: $speed, Current Volume: $setVolume, Current System Volume: $currentVolume, Target Volume: $targetVolume, MaxVolume: $maxVolume, Volume Change In Progress: $volumeChangeInProgress")
+    if(DEBUG) Log.d("Speedometer", "Speed: $speed, Current Volume: $setVolume, Current System Volume: $currentVolume, Target Volume: $targetVolume, MaxVolume: $maxVolume, Volume Change In Progress: $volumeChangeInProgress")
 
     // Start a coroutine to gradually change the volume if necessary
     if (!volumeChangeInProgress && setVolume != targetVolume) {
         CoroutineScope(Dispatchers.Main).launch {
-            Log.d("Speedometer", "Starting volume change")
+            if(DEBUG) Log.d("Speedometer", "Starting volume change")
             volumeChangeInProgress = true
             while (setVolume != targetVolume) {
                 if (setVolume < targetVolume) {
@@ -154,7 +166,7 @@ fun adjustVolume(context: Context, speed: Float) {
     // handles user changing the volume manually, but only after the app has been launched
     if (setVolume != currentVolume) {
         if (launched) {
-            Log.d("Speedometer", "User changed volume manually. Updating preferences, and also setting setVolume to currentVolume")
+            if(DEBUG) Log.d("Speedometer", "User changed volume manually. Updating preferences, and also setting setVolume to currentVolume")
             setVolume = currentVolume // this prevents the volume from going back to the previous value when the user changes it manually
             storeUserVolume(context, currentVolume, speed) // stores the current volume for the current state
         } else {
@@ -181,7 +193,7 @@ private fun getLowSpeedVolume(context: Context): Int {
 
 // Set the system volume and store the new volume for the current state
 private fun setSystemVolume(context: Context, volume: Int) {
-    Log.d("Speedometer", "Setting system volume to $volume")
+    if(DEBUG) Log.d("Speedometer", "Setting system volume to $volume")
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     // Set the actual system volume
@@ -191,10 +203,10 @@ private fun setSystemVolume(context: Context, volume: Int) {
 private fun storeUserVolume(context: Context, volume: Int, speed: Float) {
     val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
     if (speed >= HIGH_SPEED_THRESHOLD) {
-        Log.d("Speedometer", "Storing high speed volume: $volume")
+        if(DEBUG) Log.d("Speedometer", "Storing high speed volume: $volume")
         sharedPreferences.edit().putInt("${VOLUME_PREFERENCE_KEY}_high", volume).apply()
     } else {
-        Log.d("Speedometer", "Storing low speed volume: $volume")
+        if(DEBUG) Log.d("Speedometer", "Storing low speed volume: $volume")
         sharedPreferences.edit().putInt("${VOLUME_PREFERENCE_KEY}_low", volume).apply()
     }
 }
@@ -271,6 +283,59 @@ fun ToggleSwitch(isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
             color = Color.White,
             modifier = Modifier.padding(start = 10.dp)
         )
+    }
+}
+
+// FOREGROUND SERVICE
+class LocationForegroundService : Service() {
+
+    private val channelId = "location_updates_channel"
+    private val notificationId = 12345
+
+    override fun onCreate() {
+        if(DEBUG) Log.d("LocationForegroundService", "========= onCreate called =========")
+        super.onCreate()
+
+        // Create the notification channel
+        val notificationChannel = NotificationChannel(
+            channelId,
+            "Location Updates",
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(notificationChannel)
+
+        // Create the notification
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Location Updates")
+            .setContentText("Tracking your location in the background")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .build()
+
+        // Start the foreground service
+        startForeground(notificationId, notification)
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Start the location updates here
+        // ...
+        if(DEBUG) Log.d("LocationForegroundService", "========= onStartCommand called =========")
+        return START_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // Stop the location updates here
+        // ...
+
+        // Remove the notification
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(notificationId)
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        TODO("Not yet implemented")
     }
 }
 
