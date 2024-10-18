@@ -2,12 +2,13 @@ package com.saadbruno.gpsspeedvolumecontrol
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationListener
 import android.location.LocationManager
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +44,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import android.util.Log
 
-private const val DEBUG = false
+private const val DEBUG = true
 private const val PREFERENCES_FILE_NAME = "volume_preferences"
 private const val HIGH_SPEED_THRESHOLD = 4.0 // m/s
 private const val VOLUME_PREFERENCE_KEY = "volume_preference"
@@ -54,22 +55,61 @@ private var volumeChangeInProgress = false
 private var launched = false
 
 class MainActivity : ComponentActivity() {
+
     private val permissions = arrayOf(
         Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+        Manifest.permission.FOREGROUND_SERVICE_LOCATION,
+        Manifest.permission.POST_NOTIFICATIONS
     )
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onCreate(savedInstanceState)
         setContent {
             GPSSpeedVolumeControlTheme {
                 Speedometer()
             }
         }
-        ActivityCompat.requestPermissions(this, permissions, 0)
+        // Request permissions at runtime
+        requestPermissions()
+    }
+
+    private fun requestPermissions() {
+        if (permissions.all { ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED }) {
+            startForegroundService()
+        } else {
+            ActivityCompat.requestPermissions(this, permissions, 0)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+            startForegroundService()
+        } else {
+            // Handle permission denial
+        }
+    }
+
+    private fun startForegroundService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ContextCompat.startForegroundService(this, Intent(this, ForegroundService::class.java))
+        } else {
+            startService(Intent(this, ForegroundService::class.java))
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopForegroundService()
+    }
+
+    private fun stopForegroundService() {
+        val serviceIntent = Intent(this, ForegroundService::class.java)
+        stopService(serviceIntent)
     }
 }
-
 
 @Composable
 fun Speedometer() {
@@ -84,10 +124,6 @@ fun Speedometer() {
             adjustVolume(context, location.speed)
         }
     }
-
-//    BackHandler {
-//        locationManager.removeUpdates(locationListener)
-//    }
 
     if (ContextCompat.checkSelfPermission(
             context,
@@ -114,7 +150,6 @@ fun Speedometer() {
 
 }
 
-
 fun adjustVolume(context: Context, speed: Float) {
 
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -122,21 +157,17 @@ fun adjustVolume(context: Context, speed: Float) {
 
     val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
 
-    // Determine the target volume based on the speed state
     targetVolume = if (speed >= HIGH_SPEED_THRESHOLD) {
-        // High speed state
         getHighSpeedVolume(context)
     } else {
-        // Low speed state
         getLowSpeedVolume(context)
     }
 
-    if(DEBUG) Log.d("Speedometer", "Speed: $speed, Current Volume: $setVolume, Current System Volume: $currentVolume, Target Volume: $targetVolume, MaxVolume: $maxVolume, Volume Change In Progress: $volumeChangeInProgress")
+    if (DEBUG) Log.d("Speedometer", "Speed: $speed, Current Volume: $setVolume, Current System Volume: $currentVolume, Target Volume: $targetVolume, MaxVolume: $maxVolume, Volume Change In Progress: $volumeChangeInProgress")
 
-    // Start a coroutine to gradually change the volume if necessary
     if (!volumeChangeInProgress && setVolume != targetVolume) {
         CoroutineScope(Dispatchers.Main).launch {
-            if(DEBUG) Log.d("Speedometer", "Starting volume change")
+            if (DEBUG) Log.d("Speedometer", "Starting volume change")
             volumeChangeInProgress = true
             while (setVolume != targetVolume) {
                 if (setVolume < targetVolume) {
@@ -144,27 +175,23 @@ fun adjustVolume(context: Context, speed: Float) {
                 } else {
                     setVolume--
                 }
-                // Update the actual volume
                 setSystemVolume(context, setVolume)
-                delay(500) // Adjust the delay as needed for a smooth transition
+                delay(500)
             }
             volumeChangeInProgress = false
         }
     }
 
-    // handles user changing the volume manually, but only after the app has been launched
     if (setVolume != currentVolume) {
         if (launched) {
-            if(DEBUG) Log.d("Speedometer", "User changed volume manually. Updating preferences, and also setting setVolume to currentVolume")
-            setVolume = currentVolume // this prevents the volume from going back to the previous value when the user changes it manually
-            storeUserVolume(context, currentVolume, speed) // stores the current volume for the current state
+            if (DEBUG) Log.d("Speedometer", "User changed volume manually. Updating preferences, and also setting setVolume to currentVolume")
+            setVolume = currentVolume
+            storeUserVolume(context, currentVolume, speed)
         } else {
             launched = true
         }
     }
-
 }
-
 // Get the stored volume for the high speed state
 private fun getHighSpeedVolume(context: Context): Int {
     //return (maxVolume * 0.9).roundToInt()
