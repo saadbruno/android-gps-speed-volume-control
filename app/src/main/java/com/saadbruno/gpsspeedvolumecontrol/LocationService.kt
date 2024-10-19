@@ -12,12 +12,14 @@ import androidx.core.app.NotificationCompat
 /**
  * @Author: Abdul Rehman
  * @Date: 06/05/2024.
+ * Modified by Bruno Saad Marques
  */
 class LocationService : Service(), LocationUpdatesCallBack {
     private val TAG = LocationService::class.java.simpleName
 
     private lateinit var speedViewModel: SpeedViewModel
     private lateinit var gpsLocationClient: GPSLocationClient
+    private lateinit var volumeManager: VolumeManager
     private var notification: NotificationCompat.Builder? = null
     private var notificationManager: NotificationManager? = null
 
@@ -28,6 +30,7 @@ class LocationService : Service(), LocationUpdatesCallBack {
 
         // Initialize your ViewModel (consider using a singleton pattern or DI)
         speedViewModel = SpeedViewModel
+        volumeManager = VolumeManager(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -89,6 +92,9 @@ class LocationService : Service(), LocationUpdatesCallBack {
 
         // Send speed to ViewModel
         speedViewModel.updateSpeed(speedInMps)
+
+        // sends to the volume manager
+        volumeManager.updateVolume(speedInMps)
 
         // Update notification
 //         val updatedNotification = notification?.setContentText(
