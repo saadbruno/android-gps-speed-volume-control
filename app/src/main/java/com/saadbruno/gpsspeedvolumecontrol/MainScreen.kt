@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,7 +39,7 @@ fun App() {
     ) {
 
         BigSpeedMeter()
-
+        Spacer(modifier = Modifier.padding(12.dp))
         Button(onClick = {
             //Start Service
             Toast.makeText(context, "Service Start button clicked", Toast.LENGTH_SHORT).show()
@@ -76,7 +74,7 @@ fun BigSpeedMeter(speedViewModel: SpeedViewModel = viewModel()) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "${speed.value}",
+            text = speedMph,
             fontSize = 128.sp,
             color = Color.White,
             fontWeight = FontWeight.Black

@@ -12,8 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
-import com.saadbruno.gpsspeedvolumecontrol.ui.theme.BackGroundLocationTheme
+import com.saadbruno.gpsspeedvolumecontrol.ui.theme.GPSSpeedVolumeControlTheme
 
 class MainActivity : ComponentActivity() {
     private val TAG = MainActivity::class.java.simpleName
@@ -21,9 +22,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            BackGroundLocationTheme {
+            GPSSpeedVolumeControlTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize(), color = Color.Black
                 ) {
                     App()
                 }
