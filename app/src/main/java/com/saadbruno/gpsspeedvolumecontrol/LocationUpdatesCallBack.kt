@@ -1,6 +1,5 @@
 package com.saadbruno.gpsspeedvolumecontrol
 
-import android.location.GnssNavigationMessage
 import android.location.Location
 
 

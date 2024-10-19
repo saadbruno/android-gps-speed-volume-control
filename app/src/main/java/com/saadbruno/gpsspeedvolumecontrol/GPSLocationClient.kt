@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import android.os.Build
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -42,7 +41,7 @@ class GPSLocationClient {
             .setWaitForAccurateLocation(false)
             .setMinUpdateIntervalMillis(100)
             .setMaxUpdateDelayMillis(500)
-            .build();
+            .build()
 
 
         val locationCallback = object : LocationCallback() {
