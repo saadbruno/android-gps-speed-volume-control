@@ -32,8 +32,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Preview
 @Composable
 fun App() {
-    val context = LocalContext.current
-
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,

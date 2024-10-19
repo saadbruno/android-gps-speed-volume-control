@@ -2,7 +2,6 @@ package com.saadbruno.gpsspeedvolumecontrol
 
 import android.Manifest
 import android.content.Intent
-import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -11,10 +10,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import com.saadbruno.gpsspeedvolumecontrol.ui.theme.GPSSpeedVolumeControlTheme
 
 class MainActivity : ComponentActivity() {
