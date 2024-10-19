@@ -3,15 +3,12 @@ package com.saadbruno.gpsspeedvolumecontrol
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-
-
 /**
  * @Author: Abdul Rehman
  * @Date: 06/05/2024.
@@ -19,6 +16,7 @@ import androidx.core.app.NotificationCompat
 class LocationService : Service(), LocationUpdatesCallBack {
     private val TAG = LocationService::class.java.simpleName
 
+    private lateinit var speedViewModel: SpeedViewModel
     private lateinit var gpsLocationClient: GPSLocationClient
     private var notification: NotificationCompat.Builder? = null
     private var notificationManager: NotificationManager? = null
@@ -27,6 +25,9 @@ class LocationService : Service(), LocationUpdatesCallBack {
         super.onCreate()
         gpsLocationClient = GPSLocationClient()
         gpsLocationClient.setLocationUpdatesCallBack(this)
+
+        // Initialize your ViewModel (consider using a singleton pattern or DI)
+        speedViewModel = SpeedViewModel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -56,7 +57,7 @@ class LocationService : Service(), LocationUpdatesCallBack {
                 NotificationManager.IMPORTANCE_DEFAULT
             )
             val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
         notification = NotificationCompat.Builder(this, "location")
@@ -67,7 +68,7 @@ class LocationService : Service(), LocationUpdatesCallBack {
             .setOngoing(true)
 
         notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         startForeground(1, notification?.build())
     }
@@ -83,6 +84,13 @@ class LocationService : Service(), LocationUpdatesCallBack {
     }
 
     override fun onLocationUpdate(location: Location) {
+        val speedInMps = location.speed // Speed in m/s
+        Log.d(TAG, "Current speed (m/s): $speedInMps")
+
+        // Send speed to ViewModel
+        speedViewModel.updateSpeed(speedInMps)
+
+        // Update notification
         val updatedNotification = notification?.setContentText(
             "Location: (${location.latitude}, ${location.longitude})"
         )

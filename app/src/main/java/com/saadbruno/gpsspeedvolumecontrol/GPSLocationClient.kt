@@ -38,10 +38,10 @@ class GPSLocationClient {
             locationUpdatesCallBack?.locationException("GPS is OFF")
         }
 
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 500)
             .setWaitForAccurateLocation(false)
-            .setMinUpdateIntervalMillis(1000)
-            .setMaxUpdateDelayMillis(5000)
+            .setMinUpdateIntervalMillis(100)
+            .setMaxUpdateDelayMillis(500)
             .build();
 
 
