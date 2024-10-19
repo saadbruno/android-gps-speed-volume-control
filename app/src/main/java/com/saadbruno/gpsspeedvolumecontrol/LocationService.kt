@@ -27,7 +27,7 @@ class LocationService : Service(), LocationUpdatesCallBack {
         gpsLocationClient.setLocationUpdatesCallBack(this)
 
         // Initialize your ViewModel (consider using a singleton pattern or DI)
-        speedViewModel = SpeedViewModel()
+        speedViewModel = SpeedViewModel
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

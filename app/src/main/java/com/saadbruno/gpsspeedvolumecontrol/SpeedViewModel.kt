@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class SpeedViewModel : ViewModel() {
+object SpeedViewModel : ViewModel() {
     private val _speed = MutableStateFlow(0f) // Initial speed
     val speed: StateFlow<Float> get() = _speed
 
