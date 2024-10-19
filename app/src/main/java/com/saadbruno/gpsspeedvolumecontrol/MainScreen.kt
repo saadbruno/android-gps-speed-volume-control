@@ -1,14 +1,14 @@
 package com.saadbruno.gpsspeedvolumecontrol
 
-import android.content.Intent
+import android.content.res.Configuration
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 /**
@@ -38,50 +40,65 @@ fun App() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        BigSpeedMeter()
-        Spacer(modifier = Modifier.padding(12.dp))
-        Button(onClick = {
-            //Start Service
-            Toast.makeText(context, "Service Start button clicked", Toast.LENGTH_SHORT).show()
-            Intent(context, LocationService::class.java).apply {
-                action = LocationService.ACTION_SERVICE_START
-                context.startService(this)
-            }
-        }) {
-            Text(text = "Start Service")
-        }
-        Spacer(modifier = Modifier.padding(12.dp))
-        Button(onClick = {
-            //Stop Service
-            Toast.makeText(context, "Service Stop button clicked", Toast.LENGTH_SHORT).show()
-            Intent(context, LocationService::class.java).apply {
-                action = LocationService.ACTION_SERVICE_STOP
-                context.startService(this)
-            }
-        }) {
-            Text(text = "Stop Service")
+        SpeedMeterGroup()
 
+    }
+}
+
+@Composable
+fun SpeedMeterGroup(speedViewModel: SpeedViewModel = viewModel()) {
+
+    val speed = speedViewModel.speed.collectAsState()
+    Log.d("SpeedMeter", "SpeedMeter: ${speed.value}")
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    if (isLandscape) {
+        // In landscape, place the meters side by side in a Row
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            SpeedMeter(speed.value)
+            SpeedMeter(speed.value, 3.6f, "km/h", 48.sp, 28.sp)
+        }
+    } else {
+        // In portrait, keep the meters stacked in a Column
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SpeedMeter(speed.value)
+            Spacer(modifier = Modifier.padding(48.dp))
+            SpeedMeter(speed.value, 3.6f, "km/h", 48.sp, 28.sp)
         }
     }
 }
 
 @Composable
-fun BigSpeedMeter(speedViewModel: SpeedViewModel = viewModel()) {
-    val speed = speedViewModel.speed.collectAsState()
-    val speedMph = "${(speed.value * 2.23694f * 10).roundToInt() / 10.0}"
-    Log.d("BigSpeedMeter", "BigSpeedMeter: ${speed.value} | $speedMph")
+fun SpeedMeter(
+    value: Float = 0F,
+    multiplier: Float = 2.23694f,
+    unit: String = "mph",
+    fontSizeValue: TextUnit = 128.sp,
+    fontSizeUnit: TextUnit = 48.sp
+) {
+    val speedMph = "${(value * multiplier * 10).roundToInt() / 10.0}"
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = speedMph,
-            fontSize = 128.sp,
+            fontSize = fontSizeValue,
             color = Color.White,
             fontWeight = FontWeight.Black
         )
         Text(
-            text = "mph",
-            fontSize = 48.sp,
+            text = unit,
+            fontSize = fontSizeUnit,
             color = Color.Gray
         )
     }
