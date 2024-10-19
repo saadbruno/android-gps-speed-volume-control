@@ -1,7 +1,6 @@
 package com.saadbruno.gpsspeedvolumecontrol
 
 import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -9,15 +8,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.core.content.ContextCompat
 import com.saadbruno.gpsspeedvolumecontrol.ui.theme.GPSSpeedVolumeControlTheme
 
 class MainActivity : ComponentActivity() {
-    private val TAG = MainActivity::class.java.simpleName
+    private val tag = MainActivity::class.java.simpleName
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +60,7 @@ class MainActivity : ComponentActivity() {
         if (isGranted) {
             askForBGPermission()
         } else {
-            Log.d(TAG, "Permission is not $isGranted")
+            Log.d(tag, "Permission is not true")
         }
     }
 
@@ -71,9 +68,9 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            Log.d(TAG, "Background Permission is $isGranted")
+            Log.d(tag, "Background Permission is true")
         } else {
-            Log.d(TAG, "Background Permission is not $isGranted")
+            Log.d(tag, "Background Permission is not true")
         }
     }
 
