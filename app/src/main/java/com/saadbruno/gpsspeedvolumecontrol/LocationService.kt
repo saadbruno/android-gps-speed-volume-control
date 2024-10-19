@@ -61,9 +61,9 @@ class LocationService : Service(), LocationUpdatesCallBack {
             notificationManager.createNotificationChannel(channel)
         }
         notification = NotificationCompat.Builder(this, "location")
-            .setContentTitle("Tracking location...")
-            .setContentText("Searching...")
-            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setContentTitle("Utilizando sua localização")
+            .setContentText("em plano de fundo...")
+            .setSmallIcon(R.drawable.ic_launcher_mono)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setOngoing(true)
 
@@ -91,9 +91,9 @@ class LocationService : Service(), LocationUpdatesCallBack {
         speedViewModel.updateSpeed(speedInMps)
 
         // Update notification
-        val updatedNotification = notification?.setContentText(
-            "Location: (${location.latitude}, ${location.longitude})"
-        )
-        notificationManager?.notify(1, updatedNotification?.build())
+//         val updatedNotification = notification?.setContentText(
+//             "Location: (${location.latitude}, ${location.longitude})"
+//         )
+//        notificationManager?.notify(1, updatedNotification?.build())
     }
 }
