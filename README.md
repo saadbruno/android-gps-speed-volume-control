@@ -1,0 +1,1 @@
+This project uses the code from [AbdulRehmanNazar/BackgroundLocation](https://github.com/AbdulRehmanNazar/BackgroundLocation) as a foundation.

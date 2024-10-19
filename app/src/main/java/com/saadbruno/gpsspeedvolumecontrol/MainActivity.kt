@@ -1,314 +1,114 @@
 package com.saadbruno.gpsspeedvolumecontrol
 
 import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.location.LocationListener
-import android.location.LocationManager
-import android.media.AudioManager
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.saadbruno.gpsspeedvolumecontrol.ui.theme.GPSSpeedVolumeControlTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
-import android.util.Log
-
-private const val DEBUG = false
-private const val PREFERENCES_FILE_NAME = "volume_preferences"
-private const val HIGH_SPEED_THRESHOLD = 4.0 // m/s
-private const val VOLUME_PREFERENCE_KEY = "volume_preference"
-
-private var setVolume = 0
-private var targetVolume = 0
-private var volumeChangeInProgress = false
-private var launched = false
 
 class MainActivity : ComponentActivity() {
-    private val permissions = arrayOf(
-        Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION
-    )
+    private val tag = MainActivity::class.java.simpleName
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onCreate(savedInstanceState)
+        Intent(this, LocationService::class.java).apply {
+            action = LocationService.ACTION_SERVICE_START
+            startService(this)
+        }
         setContent {
             GPSSpeedVolumeControlTheme {
-                Speedometer()
-            }
-        }
-        ActivityCompat.requestPermissions(this, permissions, 0)
-    }
-}
-
-
-@Composable
-fun Speedometer() {
-    val context = LocalContext.current
-    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    val speed = remember { mutableFloatStateOf(0f) }
-    var autoVolumeEnabled by rememberSaveable { mutableStateOf(true) }
-
-    val locationListener = LocationListener { location ->
-        speed.floatValue = location.speed
-        if (autoVolumeEnabled) {
-            adjustVolume(context, location.speed)
-        }
-    }
-
-//    BackHandler {
-//        locationManager.removeUpdates(locationListener)
-//    }
-
-    if (ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    ) {
-        locationManager.requestLocationUpdates(
-            LocationManager.GPS_PROVIDER,
-            0,
-            0f,
-            locationListener
-        )
-    } else {
-        // Handle permission denial
-    }
-
-    SpeedometerLayout(
-        "${(speed.floatValue * 2.23694f * 10).roundToInt() / 10.0}",
-        "mph",
-        "${speed.floatValue}",
-        autoVolumeEnabled,
-        onCheckedChange = { autoVolumeEnabled = it }
-    )
-
-}
-
-
-fun adjustVolume(context: Context, speed: Float) {
-
-    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-
-    val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-
-    // Determine the target volume based on the speed state
-    targetVolume = if (speed >= HIGH_SPEED_THRESHOLD) {
-        // High speed state
-        getHighSpeedVolume(context)
-    } else {
-        // Low speed state
-        getLowSpeedVolume(context)
-    }
-
-    if(DEBUG) Log.d("Speedometer", "Speed: $speed, Current Volume: $setVolume, Current System Volume: $currentVolume, Target Volume: $targetVolume, MaxVolume: $maxVolume, Volume Change In Progress: $volumeChangeInProgress")
-
-    // Start a coroutine to gradually change the volume if necessary
-    if (!volumeChangeInProgress && setVolume != targetVolume) {
-        CoroutineScope(Dispatchers.Main).launch {
-            if(DEBUG) Log.d("Speedometer", "Starting volume change")
-            volumeChangeInProgress = true
-            while (setVolume != targetVolume) {
-                if (setVolume < targetVolume) {
-                    setVolume++
-                } else {
-                    setVolume--
+                Surface(
+                    modifier = Modifier.fillMaxSize(), color = Color.Black
+                ) {
+                    App()
                 }
-                // Update the actual volume
-                setSystemVolume(context, setVolume)
-                delay(500) // Adjust the delay as needed for a smooth transition
             }
-            volumeChangeInProgress = false
         }
-    }
-
-    // handles user changing the volume manually, but only after the app has been launched
-    if (setVolume != currentVolume) {
-        if (launched) {
-            if(DEBUG) Log.d("Speedometer", "User changed volume manually. Updating preferences, and also setting setVolume to currentVolume")
-            setVolume = currentVolume // this prevents the volume from going back to the previous value when the user changes it manually
-            storeUserVolume(context, currentVolume, speed) // stores the current volume for the current state
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!hasNotificationPerm()) {
+                requestMultiplePermissions.launch(
+                    arrayOf(
+                        Manifest.permission.POST_NOTIFICATIONS,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                )
+            } else {
+                checkLocationPerm()
+            }
         } else {
-            launched = true
+            checkLocationPerm()
         }
     }
 
-}
-
-// Get the stored volume for the high speed state
-private fun getHighSpeedVolume(context: Context): Int {
-    //return (maxVolume * 0.9).roundToInt()
-
-    val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
-    return sharedPreferences.getInt("${VOLUME_PREFERENCE_KEY}_high", 14)
-}
-
-// Get the stored volume for the low speed state
-private fun getLowSpeedVolume(context: Context): Int {
-    //return (maxVolume * 0.1).roundToInt()
-    val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
-    return sharedPreferences.getInt("${VOLUME_PREFERENCE_KEY}_low", 2)
-}
-
-// Set the system volume and store the new volume for the current state
-private fun setSystemVolume(context: Context, volume: Int) {
-    if(DEBUG) Log.d("Speedometer", "Setting system volume to $volume")
-    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
-    // Set the actual system volume
-    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
-}
-
-private fun storeUserVolume(context: Context, volume: Int, speed: Float) {
-    val sharedPreferences = context.getSharedPreferences(PREFERENCES_FILE_NAME, Context.MODE_PRIVATE)
-    if (speed >= HIGH_SPEED_THRESHOLD) {
-        if(DEBUG) Log.d("Speedometer", "Storing high speed volume: $volume")
-        sharedPreferences.edit().putInt("${VOLUME_PREFERENCE_KEY}_high", volume).apply()
-    } else {
-        if(DEBUG) Log.d("Speedometer", "Storing low speed volume: $volume")
-        sharedPreferences.edit().putInt("${VOLUME_PREFERENCE_KEY}_low", volume).apply()
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(tag, "APP DESTROYED")
+        Intent(this, LocationService::class.java).apply {
+            action = LocationService.ACTION_SERVICE_STOP
+            startService(this)
+        }
     }
-}
 
-// MAIN LAYOUT
-@Composable
-fun SpeedometerLayout(speed: String, unit: String, speedDebug: String, isEnabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    private val requestMultiplePermissions = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        permissions.entries.forEach {
+            Log.d("DEBUG", "${it.key} = ${it.value}")
+            if (it.key == "android.permission.POST_NOTIFICATIONS" && it.value) {
+                askForBGPermission()
+            }
+        }
+    }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceEvenly
-        ) {
-            BigSpeedMeter(speed, unit)
-            SmallSpeedMeter(speedDebug, "m/s")
-            ToggleSwitch(
-                isEnabled,
-                onCheckedChange
+    private val requestLocationPerm = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            askForBGPermission()
+        } else {
+            Log.d(tag, "Permission is not true")
+        }
+    }
+
+    private val requestBGLocationPerm = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Log.d(tag, "Background Permission is true")
+        } else {
+            Log.d(tag, "Background Permission is not true")
+        }
+    }
+
+    private fun checkLocationPerm() {
+        if (!hasLocationPermission()) {
+            requestLocationPerm.launch(
+                Manifest.permission.ACCESS_FINE_LOCATION
             )
+        } else {
+            askForBGPermission()
+        }
+    }
+
+    private fun askForBGPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (!hasBGLocationPermission()) {
+                requestBGLocationPerm.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            }
         }
     }
 }
 
-// COMPONENTS
-@Composable
-fun BigSpeedMeter(value: String, unit: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = value,
-            fontSize = 128.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Black
-        )
-        Text(
-            text = unit,
-            fontSize = 48.sp,
-            color = Color.Gray
-        )
-    }
-}
 
-@Composable
-fun SmallSpeedMeter(value: String, unit: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = value,
-            fontSize = 20.sp,
-            color = Color.DarkGray
-        )
-        Text(
-            text = unit,
-            fontSize = 10.sp,
-            color = Color.DarkGray
-        )
-    }
-}
 
-@Composable
-fun ToggleSwitch(isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Switch(
-            checked = isChecked,
-            onCheckedChange = { onCheckedChange(it) }
-        )
-        Text(
-            text = "Volume automático",
-            color = Color.White,
-            modifier = Modifier.padding(start = 10.dp)
-        )
-    }
-}
 
-// LAYOUT PREVIEWS
 
-@Preview(
-    showBackground = true,
-    showSystemUi = true
-)
-@Composable
-fun SpeedometerPreview() {
-    var foo = false
-    GPSSpeedVolumeControlTheme {
-        SpeedometerLayout(
-            "55.5",
-            "mph",
-            "1234.4",
-            foo,
-            onCheckedChange = { foo = it }
-            )
-    }
-}
 
-@Preview(
-    showBackground = true,
-    showSystemUi = true, device = "spec:parent=pixel_5,orientation=landscape"
-)
-@Composable
-fun SpeedometerPreviewLandscape() {
-    var foo = false
-    GPSSpeedVolumeControlTheme {
-        SpeedometerLayout(
-            "55.5",
-            "mph",
-            "1234.4",
-            foo,
-            onCheckedChange = { foo = it }
-        )
-    }
-}
