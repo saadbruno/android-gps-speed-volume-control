@@ -24,6 +24,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.math.roundToInt
 
+// this is the value that defines when the music volume should be high and when it should be low.
+// This variable is also present on the VolumeManager.kt file. I'm too lazy to figure out how to
+// share this value between the two files.
+private const val HIGH_SPEED_THRESHOLD = 4.0 // m/s
+
 /**
  * @Author: Abdul Rehman
  * @Date: 06/05/2024.
@@ -85,13 +90,15 @@ fun SpeedMeter(
     fontSizeUnit: TextUnit = 48.sp
 ) {
     val speedMph = "${(value * multiplier * 10).roundToInt() / 10.0}"
+    val textColor = if (value < HIGH_SPEED_THRESHOLD) Color(0xFFFFBF00) else Color.White // Amber for values lower than 4
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = speedMph,
             fontSize = fontSizeValue,
-            color = Color.White,
+            color = textColor,
             fontWeight = FontWeight.Black
         )
         Text(
