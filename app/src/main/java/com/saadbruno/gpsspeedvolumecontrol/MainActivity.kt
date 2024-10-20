@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -46,6 +47,20 @@ class MainActivity : ComponentActivity() {
         } else {
             checkLocationPerm()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Keep the screen on while the app is visible
+        Log.d(tag, "Keeping screen on")
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Allow the screen to turn off when the app is not visible
+        Log.d(tag, "Allowing screen to turn off")
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onDestroy() {
